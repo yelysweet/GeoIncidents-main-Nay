@@ -72,7 +72,7 @@ const HeatmapLayer: React.FC<{ points: HeatmapPoint[] }> = ({ points }) => {
     const circles: L.Circle[] = [];
 
     points.forEach(({ lat, lng, severity, intensity }) => {
-      const color = severityColors[severity] || '#eab308';
+      const color = severityColors[severity as keyof typeof severityColors] || '#eab308';
       const circle = L.circle([lat, lng], {
         color,
         fillColor: color,

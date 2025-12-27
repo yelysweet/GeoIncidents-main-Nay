@@ -19,7 +19,7 @@ import { Button } from '../../components/ui';
 import { ReportIncidentModal } from '../../components/incidents';
 import { incidentService, categoryService } from '../../services';
 import { useMapStore, useAuthStore } from '../../store';
-import { Incident, IncidentStatus, IncidentSeverity } from '../../types';
+import { Incident } from '../../types';
 import toast from 'react-hot-toast';
 
 // Traducciones

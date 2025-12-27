@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { BoundingBox, IncidentFilters, IncidentSeverity, IncidentStatus } from '../types';
+import { BoundingBox, IncidentFilters } from '../types';
 
 interface MapState {
   // Vista del mapa
@@ -41,8 +41,7 @@ const DEFAULT_FILTERS: IncidentFilters = {
   page: 1,
   limit: 50,
 };
-
-export const useMapStore = create<MapState>((set, get) => ({
+export const useMapStore = create<MapState>((set) => ({
   center: DEFAULT_CENTER,
   zoom: DEFAULT_ZOOM,
   bounds: null,
