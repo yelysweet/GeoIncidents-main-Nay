@@ -2,7 +2,7 @@ import { Op, WhereOptions, literal } from 'sequelize';
 import { Incident, Category, User, Evidence } from '../models';
 import { AppError } from '../middlewares';
 import { IncidentStatus, IncidentSeverity } from '../types/enums';
-import { IncidentFilter, BoundingBox, HeatmapData } from '../types';
+import { IncidentFilter, HeatmapData } from '../types';
 
 interface CreateIncidentData {
   userId?: string;
@@ -31,9 +31,8 @@ interface UpdateIncidentData {
 
 class IncidentService {
   async create(data: CreateIncidentData): Promise<Incident> {
-    // Verificar que la categoría existe
     const category = await Category.findByPk(data.categoryId);
-    
+
     if (!category || !category.isActive) {
       throw new AppError('Categoría no válida', 400);
     }
@@ -52,8 +51,8 @@ class IncidentService {
     const incident = await Incident.findByPk(id, {
       include: [
         { model: Category, as: 'category' },
-        { 
-          model: User, 
+        {
+          model: User,
           as: 'user',
           attributes: ['id', 'firstName', 'lastName', 'avatarUrl'],
         },
@@ -76,37 +75,36 @@ class IncidentService {
     const where: WhereOptions<any> = {};
 
     if (filters.categoryId) {
-      where.categoryId = filters.categoryId;
+      (where as any).categoryId = filters.categoryId;
     }
 
     if (filters.status) {
-      where.status = filters.status;
+      (where as any).status = filters.status;
     }
 
     if (filters.severity) {
-      where.severity = filters.severity;
+      (where as any).severity = filters.severity;
     }
 
     if (filters.startDate && filters.endDate) {
-      where.incidentDate = {
+      (where as any).incidentDate = {
         [Op.between]: [filters.startDate, filters.endDate],
       };
     } else if (filters.startDate) {
-      where.incidentDate = {
+      (where as any).incidentDate = {
         [Op.gte]: filters.startDate,
       };
     } else if (filters.endDate) {
-      where.incidentDate = {
+      (where as any).incidentDate = {
         [Op.lte]: filters.endDate,
       };
     }
 
-    // Filtro por bounding box (área geográfica)
     if (filters.bounds) {
-      where.latitude = {
+      (where as any).latitude = {
         [Op.between]: [filters.bounds.south, filters.bounds.north],
       };
-      where.longitude = {
+      (where as any).longitude = {
         [Op.between]: [filters.bounds.west, filters.bounds.east],
       };
     }
@@ -115,8 +113,8 @@ class IncidentService {
       where,
       include: [
         { model: Category, as: 'category' },
-        { 
-          model: User, 
+        {
+          model: User,
           as: 'user',
           attributes: ['id', 'firstName', 'lastName', 'avatarUrl'],
         },
@@ -135,7 +133,6 @@ class IncidentService {
     radiusKm: number = 5,
     limit: number = 50
   ): Promise<Incident[]> {
-    // Usando la fórmula de Haversine para calcular distancia
     const haversineFormula = `
       (6371 * acos(
         cos(radians(${latitude})) * 
@@ -153,9 +150,7 @@ class IncidentService {
       attributes: {
         include: [[literal(haversineFormula), 'distance']],
       },
-      include: [
-        { model: Category, as: 'category' },
-      ],
+      include: [{ model: Category, as: 'category' }],
       having: literal(`${haversineFormula} <= ${radiusKm}`),
       order: [[literal('distance'), 'ASC']],
       limit,
@@ -226,20 +221,20 @@ class IncidentService {
     };
 
     if (filters?.categoryId) {
-      where.categoryId = filters.categoryId;
+      (where as any).categoryId = filters.categoryId;
     }
 
     if (filters?.startDate && filters?.endDate) {
-      where.incidentDate = {
+      (where as any).incidentDate = {
         [Op.between]: [filters.startDate, filters.endDate],
       };
     }
 
     if (filters?.bounds) {
-      where.latitude = {
+      (where as any).latitude = {
         [Op.between]: [filters.bounds.south, filters.bounds.north],
       };
-      where.longitude = {
+      (where as any).longitude = {
         [Op.between]: [filters.bounds.west, filters.bounds.east],
       };
     }
@@ -249,7 +244,6 @@ class IncidentService {
       attributes: ['latitude', 'longitude', 'severity'],
     });
 
-    // Convertir severidad a intensidad
     const severityToIntensity: Record<IncidentSeverity, number> = {
       [IncidentSeverity.LOW]: 0.3,
       [IncidentSeverity.MEDIUM]: 0.5,
@@ -257,7 +251,7 @@ class IncidentService {
       [IncidentSeverity.CRITICAL]: 1.0,
     };
 
-    return incidents.map(incident => ({
+    return incidents.map((incident) => ({
       latitude: Number(incident.latitude),
       longitude: Number(incident.longitude),
       intensity: severityToIntensity[incident.severity],
@@ -271,8 +265,18 @@ class IncidentService {
       attributes: [
         'categoryId',
         [literal('COUNT(*)'), 'total'],
-        [literal(`COUNT(CASE WHEN status = '${IncidentStatus.VALIDATED}' THEN 1 END)`), 'validated'],
-        [literal(`COUNT(CASE WHEN status = '${IncidentStatus.PENDING}' THEN 1 END)`), 'pending'],
+        [
+          literal(
+            `COUNT(CASE WHEN status = '${IncidentStatus.VALIDATED}' THEN 1 END)`
+          ),
+          'validated',
+        ],
+        [
+          literal(
+            `COUNT(CASE WHEN status = '${IncidentStatus.PENDING}' THEN 1 END)`
+          ),
+          'pending',
+        ],
       ],
       include: [
         { model: Category, as: 'category', attributes: ['name', 'color', 'icon'] },
@@ -294,7 +298,7 @@ class IncidentService {
     };
 
     if (startDate && endDate) {
-      where.incidentDate = {
+      (where as any).incidentDate = {
         [Op.between]: [startDate, endDate],
       };
     }
@@ -317,7 +321,8 @@ class IncidentService {
         [literal(`TO_CHAR(incident_date, '${dateFormat}')`), 'period'],
         [literal('COUNT(*)'), 'total'],
       ],
-      group: [literal(`TO_CHAR(incident_date, '${dateFormat}')`)],
+      // agrupamos por el alias 'period' para evitar problemas con el tipo Fn
+      group: ['period'],
       order: [[literal('period'), 'ASC']],
     });
 
@@ -327,8 +332,13 @@ class IncidentService {
   // Incrementar contador de vistas
   async incrementViewCount(id: string): Promise<void> {
     await Incident.update(
-      { viewCount: literal('view_count + 1') as any },
-      { where: { id } }
+      {
+        // view_count + 1 en la columna de la BD
+        viewCount: literal('view_count + 1') as unknown as number,
+      },
+      {
+        where: { id },
+      }
     );
   }
 }

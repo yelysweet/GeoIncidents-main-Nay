@@ -27,7 +27,7 @@ export const connectDatabase = async (): Promise<void> => {
       console.log('✅ Modelos sincronizados');
       
       // Ejecutar seed automáticamente
-      const { seedDatabase } = await import('../utils/seed');
+      const { seedDatabase } = await import('../utils/seed.js');
       await seedDatabase();
     }
   } catch (error) {
