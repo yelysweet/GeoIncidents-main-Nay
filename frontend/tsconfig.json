@@ -10,8 +10,22 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
-    "types": ["vite/client"]
+
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"],
+      "@components/*": ["components/*"],
+      "@pages/*": ["pages/*"],
+      "@services/*": ["services/*"],
+      "@store/*": ["store/*"]
+    },
+
+    "types": ["node", "vite/client"],
+
+    /* 🚀 FIX CRÍTICO: evita que se generen .js en /src */
+    "noEmit": true
   },
+
   "include": [
     "src",
     "src/vite-env.d.ts",
