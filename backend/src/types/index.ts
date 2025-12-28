@@ -11,6 +11,10 @@ export interface JwtPayload {
 
 export interface AuthenticatedRequest extends Request {
   user?: JwtPayload;
+  body: any;       // Evita errores en controladores al acceder a req.body
+  params: any;     // Evita errores en rutas (req.params.id)
+  query: any;      // Query strings para filtros
+  headers: any;    // Para manejar tokens de autorización
 }
 
 export interface PaginationQuery {
