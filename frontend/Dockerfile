@@ -1,20 +1,19 @@
-FROM node:20-alpine as build
+# Imagen base de Node para producción
+FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
-
-RUN npm ci
-
+# Copiamos los archivos del proyecto
 COPY . .
 
+# Instalamos dependencias
+RUN npm install
+
+# Construimos el proyecto para producción
 RUN npm run build
 
-FROM nginx:alpine
+# Exponemos el puerto que usará Vite preview
+EXPOSE 4173
 
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+# Comando para iniciar la app en Railway
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "4173"]
