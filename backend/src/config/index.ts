@@ -3,15 +3,13 @@ import path from 'path';
 
 /**
  * Cargar explícitamente el .env desde la carpeta backend
- * (crítico en Windows + tsx)
  */
 dotenv.config({
   path: path.resolve(process.cwd(), '.env'),
 });
 
 /**
- * LOG DE VERIFICACIÓN (temporal)
- * Esto nos asegura que el backend está leyendo el .env correcto
+ * Verificación de carga
  */
 console.log('DATABASE_URL CARGADA =>', process.env.DATABASE_URL);
 
@@ -20,7 +18,6 @@ export const config = {
   port: parseInt(process.env.PORT || '3000', 10),
 
   database: {
-    // ⚠️ ESTA ES LA ÚNICA QUE USA SEQUELIZE
     url: process.env.DATABASE_URL!, 
   },
 
@@ -50,8 +47,14 @@ export const config = {
     ],
   },
 
+  // 🚀 CORS para producción (Vercel) + desarrollo local
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: [
+      process.env.CORS_ORIGIN,                      // tomado desde Railway
+      'https://geo-incidents-main-nays.vercel.app', // dominio principal en Vercel
+      /\.vercel\.app$/,                             // todas las previews *.vercel.app
+    ],
+    credentials: true,
   },
 
   rateLimit: {
@@ -59,3 +62,12 @@ export const config = {
     max: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
   },
 };
+
+/**
+ * Habilitar localhost solo en desarrollo
+ */
+if (config.env === 'development') {
+  (config.cors.origin as string[]).push('http://localhost:5173');
+}
+
+console.log('CORS ORIGINS =>', config.cors.origin);
